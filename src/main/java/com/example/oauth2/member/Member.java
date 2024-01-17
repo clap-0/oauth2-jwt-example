@@ -24,4 +24,7 @@ public class Member {
 
     @OneToMany(mappedBy = "member")
     private List<Hobby> hobbyList;
+
+    @Embedded
+    private Oauth oauth;
 }
