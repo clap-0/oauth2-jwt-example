@@ -27,4 +27,11 @@ public class Member {
 
     @Embedded
     private Oauth oauth;
+
+    private String accessToken;
+
+    public Member update(String accessToken) {
+        this.accessToken = accessToken;
+        return this;
+    }
 }
