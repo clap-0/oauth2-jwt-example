@@ -1,5 +1,7 @@
 package com.example.oauth2.global.config;
 
+import com.example.oauth2.auth.jwt.JwtAccessDeniedHandler;
+import com.example.oauth2.auth.jwt.JwtAuthenticationEntryPoint;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,8 +39,12 @@ public class SecurityConfig {
                 // 인증, 인가 설정
                 .authorizeRequests()
                 .antMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated();
+                .anyRequest().authenticated()
+                .and()
 
+                .exceptionHandling()
+                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())    // 인증 예외 처리 핸들러
+                .accessDeniedHandler(new JwtAccessDeniedHandler());             // 인가 예외 처리 핸들러
         return http.build();
     }
 }
