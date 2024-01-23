@@ -1,8 +1,8 @@
 package com.example.oauth2.auth.oauth;
 
-import com.example.oauth2.member.Member;
-import com.example.oauth2.member.MemberRepository;
-import com.example.oauth2.member.Oauth;
+import com.example.oauth2.auth.jwt.TokenProvider;
+import com.example.oauth2.global.util.CookieUtil;
+import com.example.oauth2.member.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +18,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,35 +28,71 @@ public class OauthService {
 
     private final MemberRepository memberRepository;
 
+    private final TokenProvider tokenProvider;
+
+    private final RefreshTokenRepository refreshTokenRepository;
+
     private final String CLIENT_ID;
 
     private final String REDIRECT_URI;
 
+    private final String ACCESS_HEADER;
+
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
+
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+
     @Autowired
     public OauthService(MemberRepository memberRepository,
+                        TokenProvider tokenProvider,
+                        RefreshTokenRepository refreshTokenRepository,
                         @Value("${OAuth2.kakao.client-id}") String CLIENT_ID,
-                        @Value("${OAuth2.kakao.redirect-uri}") String REDIRECT_URI) {
+                        @Value("${OAuth2.kakao.redirect-uri}") String REDIRECT_URI,
+                        @Value("${jwt.header}") String ACCESS_HEADER) {
         this.memberRepository = memberRepository;
+        this.tokenProvider = tokenProvider;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.CLIENT_ID = CLIENT_ID;
         this.REDIRECT_URI = REDIRECT_URI;
+        this.ACCESS_HEADER = ACCESS_HEADER;
     }
 
 
     @Transactional
-    public void kakaoLogin(String code, HttpServletResponse response) {
-        // 1. 인가 코드로 액세스 토큰 요청
-        String accessToken = getAccessToken(code);
+    public void kakaoLogin(String code, HttpServletRequest request, HttpServletResponse response) {
+        // 1. 인가 코드로 OAuth2 액세스 토큰 요청
+        String oauthAccessToken = getAccessToken(code);
 
-        // 2. 액세스 토큰으로 회원 정보 요청
-        JsonNode responseJson = getKakaoUserInfo(accessToken);
+        // 2. OAuth2 액세스 토큰으로 회원 정보 요청
+        JsonNode responseJson = getKakaoUserInfo(oauthAccessToken);
 
         // 3. 회원 정보 저장
-        Member member = registerKakaoUser(responseJson, accessToken);
+        Member member = registerKakaoUser(responseJson, oauthAccessToken);
 
-        // 4. JWT 토큰 발급
+        // 4. JWT 액세스 토큰 발급
+        String accessToken = tokenProvider.generateToken(member, ACCESS_TOKEN_DURATION);
+        response.setHeader(ACCESS_HEADER, accessToken);
 
-        // 5. response header에 JWT 토큰 추가
+        // 5. JWT 리프레시 토큰 발급
+        String refreshToken = tokenProvider.generateToken(member, REFRESH_TOKEN_DURATION);
+        saveRefreshToken(member.getId(), refreshToken);
+        addRefreshTokenToCookie(request, response, refreshToken);
+    }
 
+    private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
+        int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
+        CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
+        CookieUtil.addHttpOnlyCookie(response, REFRESH_TOKEN_COOKIE_NAME, refreshToken, cookieMaxAge);
+    }
+
+    private void saveRefreshToken(Long memberId, String newRefreshToken) {
+        RefreshToken refreshToken = refreshTokenRepository.findByMemberId(memberId)
+                .map(entity -> entity.update(newRefreshToken))
+                .orElse(new RefreshToken(memberId, newRefreshToken));
+
+        refreshTokenRepository.save(refreshToken);
     }
 
     /**
@@ -144,6 +182,7 @@ public class OauthService {
         Member member = memberRepository.findByOauth(oauth)
                 .map(entity -> entity.update(accessToken))
                 .orElse(Member.builder()
+                        .accessToken(accessToken)
                         .nickname(nickname)
                         .profileImage(profileImage)
                         .oauth(oauth)

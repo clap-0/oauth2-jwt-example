@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
@@ -15,8 +16,8 @@ public class OauthController {
     private final OauthService oauthService;
 
     @PostMapping("/api/auth/kakao")
-    public ResponseEntity<Void> kakaoLogin(@RequestBody LoginRequest request, HttpServletResponse response) {
-        oauthService.kakaoLogin(request.getCode(), response);
+    public ResponseEntity<Void> kakaoLogin(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
+        oauthService.kakaoLogin(loginRequest.getCode(), request, response);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
