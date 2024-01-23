@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,7 +24,8 @@ public class Member {
     private String profileImage;
 
     @OneToMany(mappedBy = "member")
-    private List<Hobby> hobbyList;
+    @Builder.Default
+    private List<Hobby> hobbyList = new ArrayList<>();
 
     @Embedded
     private Oauth oauth;
@@ -32,6 +34,12 @@ public class Member {
 
     public Member update(String accessToken) {
         this.accessToken = accessToken;
+        return this;
+    }
+
+    public Member update(String nickname, String profileImage) {
+        this.nickname = nickname;
+        this.profileImage = profileImage;
         return this;
     }
 }
