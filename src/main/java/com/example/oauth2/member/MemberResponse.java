@@ -14,6 +14,4 @@ public class MemberResponse {
     private String nickname;
 
     private String profileImage;
-
-    private List<Hobby> hobbyList;
 }

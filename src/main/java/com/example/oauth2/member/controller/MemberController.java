@@ -17,7 +17,6 @@ public class MemberController {
         return MemberResponse.builder()
                 .nickname(member.getNickname())
                 .profileImage(member.getProfileImage())
-                .hobbyList(member.getHobbyList())
                 .build();
     }
 
