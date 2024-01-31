@@ -1,8 +1,8 @@
 package com.example.oauth2.auth.jwt;
 
-import com.example.oauth2.member.Member;
-import com.example.oauth2.member.MemberService;
-import com.example.oauth2.member.RefreshTokenService;
+import com.example.oauth2.member.domain.Member;
+import com.example.oauth2.member.service.MemberService;
+import com.example.oauth2.member.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

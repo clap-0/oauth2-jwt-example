@@ -2,7 +2,11 @@ package com.example.oauth2.auth.oauth;
 
 import com.example.oauth2.auth.jwt.TokenProvider;
 import com.example.oauth2.global.util.CookieUtil;
-import com.example.oauth2.member.*;
+import com.example.oauth2.member.domain.Member;
+import com.example.oauth2.member.domain.OauthInfo;
+import com.example.oauth2.member.domain.RefreshToken;
+import com.example.oauth2.member.repository.MemberRepository;
+import com.example.oauth2.member.repository.RefreshTokenRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -177,15 +181,15 @@ public class OauthService {
         String nickname = profile.get("nickname").asText();
         String profileImage = profile.get("profile_image_url").asText();
 
-        Oauth oauth = new Oauth(oauthId, OauthProvider.KAKAO);
+        OauthInfo oauthInfo = new OauthInfo(oauthId, OauthProvider.KAKAO);
 
-        Member member = memberRepository.findByOauth(oauth)
+        Member member = memberRepository.findByOauthInfo(oauthInfo)
                 .map(entity -> entity.update(accessToken))
                 .orElse(Member.builder()
                         .accessToken(accessToken)
                         .nickname(nickname)
                         .profileImage(profileImage)
-                        .oauth(oauth)
+                        .oauthInfo(oauthInfo)
                         .build());
         return memberRepository.save(member);
     }

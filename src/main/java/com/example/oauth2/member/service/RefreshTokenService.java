@@ -1,5 +1,7 @@
-package com.example.oauth2.member;
+package com.example.oauth2.member.service;
 
+import com.example.oauth2.member.domain.RefreshToken;
+import com.example.oauth2.member.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

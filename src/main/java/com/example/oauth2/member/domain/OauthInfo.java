@@ -1,4 +1,4 @@
-package com.example.oauth2.member;
+package com.example.oauth2.member.domain;
 
 import com.example.oauth2.auth.oauth.OauthProvider;
 import lombok.AccessLevel;
@@ -12,7 +12,7 @@ import javax.persistence.Enumerated;
 @Embeddable
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Oauth {
+public class OauthInfo {
 
     private String oauthId;
 

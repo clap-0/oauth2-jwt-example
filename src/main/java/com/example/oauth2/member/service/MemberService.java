@@ -1,5 +1,8 @@
-package com.example.oauth2.member;
+package com.example.oauth2.member.service;
 
+import com.example.oauth2.member.domain.Member;
+import com.example.oauth2.member.dto.MemberRequest;
+import com.example.oauth2.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

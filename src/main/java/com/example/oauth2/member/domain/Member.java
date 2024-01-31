@@ -1,4 +1,4 @@
-package com.example.oauth2.member;
+package com.example.oauth2.member.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +22,7 @@ public class Member {
     private String profileImage;
 
     @Embedded
-    private Oauth oauth;
+    private OauthInfo oauthInfo;
 
     private String accessToken;
 
